@@ -1642,7 +1642,7 @@
                             "***"
                         ],
                         footnotes: [
-                            "*Adapted from 'Final Days' by Jenny Williams in Collegetown Magazine."
+                            "<i>*Adapted from Williams, J. (2024, December 16). *Final days*. Collegetown Magazine. https://www.collegetownmagazine.com/articles/final-days-jenny-williams-poetry</i>"
                         ]
                     },
                     {
@@ -1798,7 +1798,172 @@
             }
         };
 
-        // ====== RENDERING FUNCTIONS ======
+        // ====== NEW ROUTING LOGIC ======
+
+        const workMap = {};
+        const flatWorkList = [];
+
+        // Build the workMap and flatWorkList for easy lookup and navigation
+        function buildLookups() {
+            let index = 0;
+            for (const [category, subsections] of Object.entries(portfolioData)) {
+                for (const [subsection, works] of Object.entries(subsections)) {
+                    works.forEach(work => {
+                        // Only add items that have a shortname (i.e., are internal pages)
+                        if (work.shortname) {
+                            const workData = {
+                                ...work, // Spread the original work object
+                                category: category,
+                                subsection: subsection,
+                                index: index
+                            };
+                            
+                            workMap[work.shortname] = workData;
+                            flatWorkList.push(workData);
+                            index++;
+                        }
+                    });
+                }
+            }
+        }
+
+        // Main router function
+        function handleHashChange() {
+            const hash = window.location.hash;
+            
+            // Check if the hash is for a specific work
+            if (hash.startsWith('#/work/')) {
+                const slug = hash.substring(7); // Get the part after '#/work/'
+                const workData = workMap[slug];
+                
+                if (workData) {
+                    renderItemPage(workData);
+                } else {
+                    // If slug not found, just show the main page
+                    showMainPage();
+                }
+            } else {
+                // If it's any other hash (like '#' or '#poems'), show the main page
+                showMainPage();
+                
+                // If it's a category anchor, scroll to it
+                if (hash.length > 1) {
+                    const element = document.getElementById(hash.substring(1));
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            }
+        }
+
+        // Renders the main list view
+        function showMainPage() {
+            document.getElementById('itemPage').classList.remove('active');
+            document.getElementById('mainView').classList.remove('hidden');
+        }
+        
+        // Renders the individual item page
+        function renderItemPage(workData) {
+            const { work, category, subsection, index } = workData;
+            
+            // Find prev/next work from the flat list
+            const prevWork = index > 0 ? flatWorkList[index - 1] : null;
+            const nextWork = index < flatWorkList.length - 1 ? flatWorkList[index + 1] : null;
+            
+            let contentHTML = '';
+            
+            // Format content based on category
+            if (category === 'Poems') {
+                if (Array.isArray(workData.content)) {
+                    contentHTML = workData.content.map(line => {
+                        return line === '' ? '<div class="poem-line">&nbsp;</div>' : `<div class="poem-line">${line}</div>`;
+                    }).join('');
+                } else if (typeof workData.content === 'string') {
+                    contentHTML = `<p class="poem-line">${workData.content}</p>`;
+                }
+            } else {
+                // This is for "Prose", "Acousmatics", etc.
+                if (Array.isArray(workData.content)) {
+                    contentHTML = workData.content.map(para => `<p>${para}</p>`).join('');
+                } else if (typeof workData.content === 'string') {
+                    contentHTML = `<p>${workData.content}</p>`;
+                }
+            }
+            
+            // Date at the top (if subtext exists)
+            let dateHTML = '';
+            if (workData.subtext) {
+                dateHTML = `<div class="item-date">${workData.subtext}</div>`;
+            }
+            
+            // Metadata at the bottom
+            let metadataHTML = '<div class="item-metadata-section">';
+            if (workData.heading) {
+                metadataHTML += `<div class="item-meta">${workData.heading}</div>`;
+            }
+            metadataHTML += `<div class="item-meta">Year: ${workData.year}</div>`;
+            metadataHTML += `<div class="item-meta">Category: ${category}</div>`;
+            metadataHTML += `<div class="item-meta">Subsection: ${subsection}</div>`;
+            if (workData.shortname) {
+                metadataHTML += `<div class="item-meta">ID: ${workData.shortname}</div>`;
+            }
+            metadataHTML += '</div>';
+            
+            // Add footnotes if they exist
+            let footnotesHTML = '';
+            if (workData.footnotes && workData.footnotes.length > 0) {
+                footnotesHTML = '<div class="footnotes"><h4>Notes</h4>';
+                workData.footnotes.forEach((note, i) => {
+                    footnotesHTML += `<p class="footnote">${note}</p>`;
+                });
+                footnotesHTML += '</div>';
+            }
+
+            // Create Previous/Next Navigation HTML
+            let navHTML = '<div class="item-page-nav">';
+            
+            // Previous Link
+            if (prevWork) {
+                navHTML += `<a class="back-link" href="#/work/${prevWork.shortname}">← Previous</a>`;
+            } else {
+                navHTML += '<span class="nav-placeholder"></span>'; // Placeholder to balance flexbox
+            }
+            
+            // Back Link - now goes to the main page anchor for that category
+            const categoryId = category.toLowerCase().replace(/\s+/g, '-');
+            navHTML += `<a class="back-link" href="#${categoryId}">← Back to ${category}</a>`;
+            
+            // Next Link
+            if (nextWork) {
+                navHTML += `<a class="back-link" href="#/work/${nextWork.shortname}">Next →</a>`;
+            } else {
+                navHTML += '<span class="nav-placeholder"></span>'; // Placeholder to balance flexbox
+            }
+            navHTML += '</div>';
+
+            
+            const itemPageHTML = `
+                <a class="back-link" href="#${categoryId}">← Back to ${category}</a>
+                <div class="item-header">
+                    <h1 class="item-title">${workData.name}</h1>
+                    ${dateHTML}
+                </div>
+                <div class="item-content">
+                    ${contentHTML}
+                </div>
+                ${metadataHTML}
+                ${footnotesHTML}
+                ${navHTML}
+            `;
+            
+            document.getElementById('itemPage').innerHTML = itemPageHTML;
+            document.getElementById('itemPage').classList.add('active');
+            document.getElementById('mainView').classList.add('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        // ====== ORIGINAL RENDERING FUNCTIONS (Modified) ======
+        
         function renderNavigation() {
             const nav = document.getElementById('mainNav');
             const categories = Object.keys(portfolioData);
@@ -1832,10 +1997,12 @@
                         if (work.externalUrl) {
                             // Render a direct external link
                             html += `<a href="${work.externalUrl}" target="_blank" rel="noopener noreferrer">${work.name}</a>`;
+                        } else if (work.shortname) {
+                            // Render the internal hash link
+                            html += `<a href="#/work/${work.shortname}">${work.name}</a>`;
                         } else {
-                            // Render the internal onclick handler
-                            // Fixed: Escaped single quotes in work.name for the onclick handler
-                            html += `<a onclick="showWork('${category}', '${subsection}', '${work.name.replace(/'/g, "\\'")}')">${work.name}</a>`;
+                            // Fallback for items without a shortname or URL (shouldn't happen for routable items)
+                            html += `<span>${work.name}</span>`;
                         }
                         
                         html += `</li>`;
@@ -1850,119 +2017,15 @@
             main.innerHTML = html;
         }
 
-        function showWork(category, subsection, name) {
-            const subsectionArray = portfolioData[category][subsection];
-            const work = subsectionArray.find(w => w.name === name);
-            if (!work) return;
-
-            // Find current index for prev/next navigation
-            const currentIndex = subsectionArray.findIndex(w => w.name === name);
-            const prevWork = currentIndex > 0 ? subsectionArray[currentIndex - 1] : null;
-            const nextWork = currentIndex < subsectionArray.length - 1 ? subsectionArray[currentIndex + 1] : null;
-            
-            let contentHTML = '';
-            
-            // Format content based on category
-            // Fixed: Added robust checking for Array vs. String content
-            if (category === 'Poems') {
-                if (Array.isArray(work.content)) {
-                    contentHTML = work.content.map(line => {
-                        return line === '' ? '<div class="poem-line">&nbsp;</div>' : `<div class="poem-line">${line}</div>`;
-                    }).join('');
-                } else if (typeof work.content === 'string') {
-                    // Handle prose-like content (like Black Dog) that's a single string
-                    contentHTML = `<p class="poem-line">${work.content}</p>`;
-                }
-            } else {
-                 // This is for "Prose", "Acousmatics", etc.
-                if (Array.isArray(work.content)) {
-                    contentHTML = work.content.map(para => `<p>${para}</p>`).join('');
-                } else if (typeof work.content === 'string') {
-                    contentHTML = `<p>${work.content}</p>`;
-                }
-            }
-            
-            // Date at the top (if subtext exists)
-            let dateHTML = '';
-            if (work.subtext) {
-                dateHTML = `<div class="item-date">${work.subtext}</div>`;
-            }
-            
-            // Metadata at the bottom
-            let metadataHTML = '<div class="item-metadata-section">';
-            if (work.heading) {
-                metadataHTML += `<div class="item-meta">${work.heading}</div>`;
-            }
-            metadataHTML += `<div class="item-meta">Year: ${work.year}</div>`;
-            metadataHTML += `<div class="item-meta">Category: ${category}</div>`;
-            metadataHTML += `<div class="item-meta">Subsection: ${subsection}</div>`;
-            if (work.shortname) {
-                metadataHTML += `<div class="item-meta">ID: ${work.shortname}</div>`;
-            }
-            metadataHTML += '</div>';
-            
-            // Add footnotes if they exist
-            let footnotesHTML = '';
-            if (work.footnotes && work.footnotes.length > 0) {
-                footnotesHTML = '<div class="footnotes"><h4>Notes</h4>';
-                work.footnotes.forEach((note, i) => {
-                    // Use innerHTML to render the <i> tags from the speech
-                    footnotesHTML += `<p class="footnote">${note}</p>`;
-                });
-                footnotesHTML += '</div>';
-            }
-
-            // Create Previous/Next Navigation HTML
-            let navHTML = '<div class="item-page-nav">';
-            
-            // Previous Link
-            if (prevWork) {
-                navHTML += `<a class="back-link" onclick="showWork('${category}', '${subsection}', '${prevWork.name.replace(/'/g, "\\'")}')">← Previous</a>`;
-            } else {
-                navHTML += '<span class="nav-placeholder"></span>'; // Placeholder to balance flexbox
-            }
-            
-            // Back Link
-            navHTML += `<a class="back-link" onclick="hideWork()">← Back to ${category}</a>`;
-            
-            // Next Link
-            if (nextWork) {
-                navHTML += `<a class="back-link" onclick="showWork('${category}', '${subsection}', '${nextWork.name.replace(/'/g, "\\'")}')">Next →</a>`;
-            } else {
-                navHTML += '<span class="nav-placeholder"></span>'; // Placeholder to balance flexbox
-            }
-            navHTML += '</div>';
-
-            
-            const itemPageHTML = `
-                <a class="back-link" onclick="hideWork()">← Back to ${category}</a>
-                <div class="item-header">
-                    <h1 class="item-title">${work.name}</h1>
-                    ${dateHTML}
-                </div>
-                <div class="item-content">
-                    ${contentHTML}
-                </div>
-                ${metadataHTML}
-                ${footnotesHTML}
-                ${navHTML}
-            `;
-            
-            document.getElementById('itemPage').innerHTML = itemPageHTML;
-            document.getElementById('itemPage').classList.add('active');
-            document.getElementById('mainView').classList.add('hidden');
-            window.scrollTo(0, 0);
-        }
-
-        function hideWork() {
-            document.getElementById('itemPage').classList.remove('active');
-            document.getElementById('mainView').classList.remove('hidden');
-            window.scrollTo(0, 0);
-        }
-
-        // Initialize on load
-        renderNavigation();
+        // ====== INITIALIZE PAGE ======
+        
+        buildLookups(); // Build the map first
+        renderNavigation(); // Then render the page
         renderContent();
+        
+        // Add event listeners
+        window.addEventListener('hashchange', handleHashChange);
+        window.addEventListener('load', handleHashChange); // Handle initial load with hash
     </script>
 </body>
 </html>

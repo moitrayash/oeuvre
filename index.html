@@ -266,7 +266,7 @@
 
         .footnotes h4 {
             font-family: Georgia, 'Times New Roman', serif;
-            font-size: 48px;
+            font-size: 24px; /* Reduced from 48px for a more subtle look */
             font-weight: normal;
             margin-bottom: 20px;
         }
@@ -1470,7 +1470,8 @@
                             "I pause to walk back over to the bookshelf and open a new bottle. She thinks I have bad network.",
                             "“Lia?”",
                             "She’s crying again. Sometimes I wonder if she loves him more than she loves me. She has a soft corner for bastards anyway. I am primarily bummed that the Vet’s wouldn’t let me take the shell and fur home.",
-                            "When he died, I played with him. His fur was pristine as always, by the way. Smooth and not smelly, courtesy of yours truly. There’s something about his cold lifeless stomach that made me want to put my head on it. I wagged his tail and folded his ears. I got up only to go to the bathroom and empty my bladder. It seems my mother’s still preoccupied with emptying her eyebags.",
+                            "When he died, I played with him. His fur was pristine as always, by the way. Smooth and not smelly, courtesy of yours truly. There’s something about his cold lifeless stomach that made me want to put my head on it.*",
+                            "I wagged his tail and folded his ears. I got up only to go to the bathroom and empty my bladder. It seems my mother’s still preoccupied with emptying her eyebags.",
                             "“Mum. I have to go.”",
                             "“Goodbye, Lia. I love you.”",
                             "“Bye Mum.”",
@@ -1602,7 +1603,7 @@
                             "“No, he is.”",
                             "“Brent, why’d you come here?”",
                             "“You called me.”",
-                            "“I made a phone call to you, yes, but that did not necessitate your arrival at my fucking beside.”",
+                            "“I made a phone call to you, yes, but that did not necessitate your arrival at my fucking bedside.”",
                             "“One way or another, eh?”",
                             "“Will you cut it?”",
                             "“Sorry.”",
@@ -1639,6 +1640,9 @@
                             "I’m not sure I remember the events of the day very well. It is dark outside—that I know—and Brent was over for some reason. I think we took an Uber to mine and he paid for it out of his own pocket. I unwrap myself out of the white duvet; I do not hear Brent.",
                             "Slippers on, and I tiptoe downstairs. The fur still hasn’t faded away.",
                             "***"
+                        ],
+                        footnotes: [
+                            "*Adapted from 'Final Days' by Jenny Williams in Collegetown Magazine."
                         ]
                     },
                     {
@@ -1652,7 +1656,7 @@
                             "*",
                             "New York smells. It’s a coldish March and the little mounds of dirty snow off to the side of the road make me miss Valentine’s.",
                             "The cars swish and swoosh and their headlights are blurry if you squint for too long. The voice in my head cares not. I step onto the asphalt-concrete-cement monstrosity. It is always thrilling to face the other way from incoming traffic—the backlights blush as their human drivers slam on the brakes and swerve. Honks erupt. I trod along.",
-                            "There’s also a little insect-like pressing squeeze onto my brain. It is heavier than an insect but it envelopes me somehow. I clench my jaws to feel control again. I achieve control in the way that you know that there are no cats sitting atop the torch of Lady Liberty.",
+                            "There’s also a little insect-like pressing—no, squeezing—on the ends of my brain. It is heavier than an insect but it envelopes me somehow. I clench my jaws to feel control again. I achieve control in the way that you know that there are no cats sitting atop the torch of Lady Liberty.",
                             "My vision goes back. Buzz. I picture a thousand white men in blue-black-grey-brown. They all don nametag stickers where the lapels on their blazers belong. I look around the conference room for food or water; the tables are empty. The tablecloths are red; the tables are empty. The room is empty. There is no white man. Zap.",
                             "I scurry off into an alleyway. American cars won’t fit in this cavity. A single notification reminds me that my roommate from freshman year still has my birthday on her calendar. I don’t know how to respond to this. I am aware that she doesn’t remember when she put this in, or even if. I am aware that she is texting in some reminiscence of the shells of us. Is this a good thing?",
                             "Police siren once again. They can’t come for me in this alleyway; there is a crack addict at the sidewalk’s cut who attracts more attention than I. I thank him as I walk out and he tells me to “Go fuck yourself, slut.”. I thank him again for not stabbing me, but I really don’t know how performative that is.",
@@ -1718,8 +1722,8 @@
                     {
                         name: "Farewell to Scottish High International School",
                         shortname: "farewell-shis",
-                        subtext: "Delivered in 2022",
-                        year: 2022,
+                        subtext: "Delivered in 2023",
+                        year: 2023,
                         externalUrl: "https://www.youtube.com/watch?v=OyDLwAbbiPo&t=65s"
                     }
                 ],
@@ -1727,8 +1731,8 @@
                     {
                         name: "Farewell to Scottish High International School",
                         shortname: "farewell-shis-transcript",
-                        subtext: "Delivered in 2022",
-                        year: 2022,
+                        subtext: "Delivered in 2023",
+                        year: 2023,
                         content: [
                             "<i>*hold shirt up, look at it*</i>",
                             "Asli head boy. The sec gen who wasn’t. Mumma’s boy.",
@@ -1902,7 +1906,8 @@
             if (work.footnotes && work.footnotes.length > 0) {
                 footnotesHTML = '<div class="footnotes"><h4>Notes</h4>';
                 work.footnotes.forEach((note, i) => {
-                    footnotesHTML += `<p class="footnote">${i + 1}. ${note}</p>`;
+                    // Use innerHTML to render the <i> tags from the speech
+                    footnotesHTML += `<p class="footnote">${note}</p>`;
                 });
                 footnotesHTML += '</div>';
             }
@@ -1939,9 +1944,8 @@
                     ${contentHTML}
                 </div>
                 ${metadataHTML}
-
-                ${navHTML} 
                 ${footnotesHTML}
+                ${navHTML}
             `;
             
             document.getElementById('itemPage').innerHTML = itemPageHTML;
